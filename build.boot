@@ -16,17 +16,20 @@
 (bootlaces! +version+ :dont-modify-paths? true)
 
 (task-options!
-  pom {:project     'aatree/aadurable
+  pom {:project     'aadurable
        :version     +version+
        :description "Lazy serialization and virtual data structures"
        :url         "https://github.com/aatree/aadurable"
        :scm         {:url "https://github.com/aatree/aadurable"}
-       :license     {"EPL" "http://www.eclipse.org/legal/epl-v10.html"}})
+       :license     {"EPL" "http://www.eclipse.org/legal/epl-v10.html"}}
+  aot {:namespace '#{aadurable.core}})
 
 (deftask dev
   "Build project for development."
   []
   (comp
+    (aot)
+    (show :fileset true)
     (build-jar)
     (target)))
 
@@ -34,7 +37,8 @@
    "Setup, compile and run the tests."
    []
    (comp
-;     (show :fileset true)
+     (aot)
+     (show :fileset true)
      (run-tests)
      ))
 
