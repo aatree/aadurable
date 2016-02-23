@@ -14,22 +14,28 @@
            (clojure.lang Counted)
            (aadurable CountedSequence)))
 
-(definterface XIterator
-  (^Long index [])
-  (bumpIndex [index])
-  (count [index])
-  (fetch [index]))
+(defprotocol XIterator
+  (^Long xiindex [this])
+  (xibumpIndex [this index])
+  (xicount [this index])
+  (xifetch [this index]))
+
+#_ (definterface XIterator
+  (^Long xiindex [])
+  (xibumpIndex [index])
+  (xicount [index])
+  (xifetch [index]))
 
 (set! *warn-on-reflection* true)
 
-(defn -create [^XIterator iter initialIndex styp]
-  (if (< 0 (.count iter initialIndex))
+(defn -create [iter initialIndex styp]
+  (if (< 0 (xicount iter initialIndex))
     (new aadurable.CountedSequence iter initialIndex styp)
     nil))
 
-(defrecord seq-state [^XIterator iter ndx styp rst])
+(defrecord seq-state [iter ndx styp rst])
 
-(defn iter ^XIterator [seq-state] (:iter seq-state))
+(defn iter [seq-state] (:iter seq-state))
 
 (defn -init
   ([^Iterator iter initialIndex styp]
@@ -44,7 +50,7 @@
 
 (defn -first [^CountedSequence this]
   (let [s (.-state this)]
-    (.fetch (iter s) (:ndx s))))
+    (xifetch (iter s) (:ndx s))))
 
 (defn -next [^CountedSequence this]
   (let [s (.-state this)
@@ -52,9 +58,9 @@
         r (:rst s)]
     (when (= s @r)
       (-first this)
-      (swap! r #(if (= s %) (-create it (.bumpIndex it (:ndx s)) (:styp s)))))
+      (swap! r #(if (= s %) (-create it (xibumpIndex it (:ndx s)) (:styp s)))))
     @(:rst s)))
 
 (defn -count [^CountedSequence this]
   (let [s (.-state this)]
-    (.count (iter s) (:ndx s))))
+    (xicount (iter s) (:ndx s))))

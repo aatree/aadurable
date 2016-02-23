@@ -1,8 +1,8 @@
 (ns aadurable.nodes
+  (:require [aadurable.CountedSequence :refer :all])
   (:import (clojure.lang Counted MapEntry IMapEntry PersistentVector)
            (java.util Iterator Comparator BitSet)
            (aadurable CountedSequence)
-           (aadurable.CountedSequence XIterator)
            (java.nio CharBuffer ByteBuffer LongBuffer)))
 
 (set! *warn-on-reflection* true)
@@ -167,26 +167,26 @@
    opts]
 
   XIterator
-  (count [this index]
+  (xicount [this index]
     (- cnt index))
-  (index [this]
+  (xiindex [this]
     ndx)
-  (bumpIndex [this index]
+  (xibumpIndex [this index]
     (+ 1 index))
-  (fetch [this index]
+  (xifetch [this index]
     (nth-t2 node index opts))
 
   Counted
   (count [this]
-    (.count this ndx))
+    (xicount this ndx))
 
   Iterator
   (hasNext [this]
     (< ndx cnt))
   (next [this]
     (let [i ndx]
-      (set! ndx (.bumpIndex this i))
-      (.fetch this i))))
+      (set! ndx (xibumpIndex this i))
+      (xifetch this i))))
 
 (defn ^counted-iterator new-counted-iterator
   ([^INode node opts]
@@ -197,10 +197,10 @@
 (defn ^CountedSequence new-counted-seq
   ([node opts]
    (let [it (new-counted-iterator node opts)]
-     (CountedSequence/create it (.index it) identity)))
+     (CountedSequence/create it (xiindex it) identity)))
   ([node i opts]
    (let [it (new-counted-iterator node i opts)]
-     (CountedSequence/create it (.index it) identity))))
+     (CountedSequence/create it (xiindex it) identity))))
 
 (deftype counted-reverse-iterator
   [node
@@ -208,26 +208,26 @@
    opts]
 
   XIterator
-  (count [this index]
+  (xicount [this index]
     (+ 1 index))
-  (index [this]
+  (xiindex [this]
     ndx)
-  (bumpIndex [this index]
+  (xibumpIndex [this index]
     (- index 1))
-  (fetch [this index]
+  (xifetch [this index]
     (nth-t2 node index opts))
 
   Counted
   (count [this]
-    (.count this ndx))
+    (xicount this ndx))
 
   Iterator
   (hasNext [this]
     (>= ndx 0))
   (next [this]
     (let [i ndx]
-      (set! ndx (.bumpIndex this i))
-      (.fetch this i))))
+      (set! ndx (xibumpIndex this i))
+      (xifetch this i))))
 
 (defn ^counted-reverse-iterator new-counted-reverse-iterator
   ([^INode node opts]
@@ -238,10 +238,10 @@
 (defn ^CountedSequence new-counted-reverse-seq
   ([node opts]
    (let [it (new-counted-reverse-iterator node opts)]
-     (CountedSequence/create it (.index it) identity)))
+     (CountedSequence/create it (xiindex it) identity)))
   ([node i opts]
    (let [it (new-counted-reverse-iterator node i opts)]
-     (CountedSequence/create it (.index it) identity))))
+     (CountedSequence/create it (xiindex it) identity))))
 
 (defn vector-add [^INode n v i opts]
   (if (empty-node? n)
@@ -305,15 +305,15 @@
 (defn ^CountedSequence new-map-entry-seq
   ([node x opts]
    (let [it (new-map-entry-iterator node x opts)]
-     (CountedSequence/create it (.index it) identity))))
+     (CountedSequence/create it (xiindex it) identity))))
 
 (defn ^CountedSequence new-map-key-seq [node opts]
   (let [it (new-counted-iterator node opts)]
-    (CountedSequence/create it (.index it) key-of)))
+    (CountedSequence/create it (xiindex it) key-of)))
 
 (defn ^CountedSequence new-map-value-seq [node opts]
   (let [it (new-counted-iterator node opts)]
-    (CountedSequence/create it (.index it) value-of)))
+    (CountedSequence/create it (xiindex it) value-of)))
 
 (defn ^counted-reverse-iterator new-map-entry-reverse-iterator
   ([node x opts]
@@ -322,15 +322,15 @@
 (defn ^CountedSequence new-map-entry-reverse-seq
   ([node x opts]
    (let [it (new-map-entry-reverse-iterator node x opts)]
-     (CountedSequence/create it (.index it) identity))))
+     (CountedSequence/create it (xiindex it) identity))))
 
 (defn ^CountedSequence new-map-key-reverse-seq [node opts]
   (let [it (new-counted-reverse-iterator node opts)]
-    (CountedSequence/create it (.index it) key-of)))
+    (CountedSequence/create it (xiindex it) key-of)))
 
 (defn ^CountedSequence new-map-value-reverse-seq [node opts]
   (let [it (new-counted-reverse-iterator node opts)]
-    (CountedSequence/create it (.index it) value-of)))
+    (CountedSequence/create it (xiindex it) value-of)))
 
 (defn map-insert [^INode this ^MapEntry t-2 opts]
   (if (empty-node? this)
