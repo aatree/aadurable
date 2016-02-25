@@ -1,6 +1,9 @@
-(ns aadurable.cs
+(ns aadurable.CountedSequence
   (:require-macros
     [cljs.core :refer [es6-iterable]]))
+
+(def bs (atom (BitSet.)))
+(swap! bs set 128 1)
 
 (defn- -indexOf
   ([coll x]
@@ -36,13 +39,13 @@
              (recur (dec idx)))
            -1))))))
 
-(defprotocol x-iterator
-  (xi-index [])
-  (xi-bumpIndex [index])
-  (xi-count [index])
-  (xi-fetch [index]))
+(defprotocol XIterator
+  (^Long xiindex [this])
+  (xibumpIndex [this index])
+  (xicount [this index])
+  (xifetch [this index]))
 
-(deftype CountedSequence [arr i meta]
+(deftype CountedSequence [iter i styp meta]
   Object
   (toString [coll]
     (pr-str* coll))
@@ -58,44 +61,44 @@
     (-lastIndexOf coll x start))
 
   ICloneable
-  (-clone [_] (CountedSequence. arr i meta))
+  (-clone [_] (CountedSequence. iter i styp meta))
 
   ISeqable
   (-seq [this]
-    (when (< i (alength arr))
+    (when (>= 0 (xicount iter i))
       this))
 
   IMeta
   (-meta [coll] meta)
   IWithMeta
   (-with-meta [coll new-meta]
-    (CountedSequence. arr i new-meta))
+    (CountedSequence. iter i styp new-meta))
 
   ASeq
   ISeq
-  (-first [_] (aget arr i))
-  (-rest [_] (if (< (inc i) (alength arr))
-               (CountedSequence. arr (inc i) nil)
+  (-first [_] (styp (xifetch iter i)))
+  (-rest [_] (if (> 0 (xicount iter i))
+               (CountedSequence. iter (inc i) stype nil)
                (list)))
 
   INext
   (-next [_] (if (< (inc i) (alength arr))
-               (CountedSequence. arr (inc i) nil)
+               (CountedSequence. iter (inc i) stype nil)
                nil))
 
   ICounted
   (-count [_]
-    (max 0 (- (alength arr) i)))
+    (max 0 (xicount iter i)))
 
   IIndexed
   (-nth [coll n]
     (let [i (+ n i)]
-      (when (< i (alength arr))
-        (aget arr i))))
+      (when (>= 0 (xicount iter i))
+        (styp (xifetch iter i)))))
   (-nth [coll n not-found]
     (let [i (+ n i)]
-      (if (< i (alength arr))
-        (aget arr i)
+      (if (>= 0 (xicount iter i))
+        (styp (xifetch iter i))
         not-found)))
 
   ISequential
@@ -104,19 +107,13 @@
 
   IIterable
   (-iterator [coll]
-    (IndexedSeqIterator. arr i))
+    iter)
 
   ICollection
   (-conj [coll o] (cons o coll))
 
   IEmptyableCollection
   (-empty [coll] (.-EMPTY List))
-
-  IReduce
-  (-reduce [coll f]
-    (array-reduce arr f (aget arr i) (inc i)))
-  (-reduce [coll f start]
-    (array-reduce arr f start i))
 
   IHash
   (-hash [coll] (hash-ordered-coll coll))

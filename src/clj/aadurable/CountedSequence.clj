@@ -20,12 +20,6 @@
   (xicount [this index])
   (xifetch [this index]))
 
-#_ (definterface XIterator
-  (^Long xiindex [])
-  (xibumpIndex [index])
-  (xicount [index])
-  (xifetch [index]))
-
 (set! *warn-on-reflection* true)
 
 (defn -create [iter initialIndex styp]

@@ -22,7 +22,7 @@
        :url         "https://github.com/aatree/aadurable"
        :scm         {:url "https://github.com/aatree/aadurable"}
        :license     {"EPL" "http://www.eclipse.org/legal/epl-v10.html"}}
-  aot {:namespace '#{aadurable.proto aadurable.CountedSequence aadurable.nodes}})
+  aot {:namespace '#{aadurable.CountedSequence aadurable.nodes}})
 
 (deftask dev
   "Build project for development."
